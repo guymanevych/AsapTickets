@@ -20,3 +20,9 @@ jobs:
 
       - name: Run ticket monitor
         run: python main.py
+
+      - name: Upload Viagogo response
+        uses: actions/upload-artifact@v4
+        with:
+          name: viagogo-response
+          path: viagogo_response.html
