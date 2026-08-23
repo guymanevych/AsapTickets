@@ -18,7 +18,5 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Test runner
-        run: |
-          python --version
-          echo "ASAP Rocky ticket monitor is running"
+      - name: Run ticket monitor
+        run: python main.py
