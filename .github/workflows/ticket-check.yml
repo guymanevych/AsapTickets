@@ -1,28 +1,52 @@
-name: ASAP Rocky Ticket Monitor
+# Save this file as: .github/workflows/viagogo-watcher.yml
+# (GitHub only recognizes scheduled workflows inside .github/workflows/)
+
+name: viagogo-watcher
 
 on:
-  workflow_dispatch:
   schedule:
-    - cron: "7,22,37,52 * * * *"
+    - cron: "*/30 * * * *"   # every 30 minutes, UTC — GitHub may delay this by a few minutes at busy times
+  workflow_dispatch: {}       # lets you trigger a manual run from the Actions tab, for testing
+
+permissions:
+  contents: write            # needed so the workflow can commit the alert-cooldown state file back
 
 jobs:
-  check-tickets:
+  check:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.11"
 
-      - name: Run ticket monitor
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+
+      - name: Run watcher
+        env:
+          VIAGOGO_URL: ${{ secrets.VIAGOGO_URL }}
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          ALERT_TO: ${{ secrets.ALERT_TO }}
+          SECTION_KEYWORD: "standing"
+          MIN_QUANTITY: "4"
+          END_DATETIME: "2026-10-05T20:00:00"
+          END_TZ: "Asia/Jerusalem"
         run: python main.py
 
-      - name: Upload Viagogo response
-        uses: actions/upload-artifact@v4
-        with:
-          name: viagogo-response
-          path: viagogo_response.html
+      # Persists last_alert.json (the alert-cooldown timestamp) between runs
+      # by committing it back to the repo. Harmless no-op if nothing changed.
+      - name: Persist alert-cooldown state
+        if: always()
+        run: |
+          git config user.name "viagogo-watcher-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add last_alert.json 2>/dev/null || true
+          git diff --quiet --cached || git commit -m "update alert state"
+          git push || true
