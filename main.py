@@ -1,8 +1,9 @@
-import requests
+from urllib.request import Request, urlopen
+
 
 URL = "https://www.viagogo.com/bg/Concert-Tickets/E-161267796"
 
-headers = {
+HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -14,26 +15,32 @@ headers = {
 def main():
     print("Checking Viagogo...")
 
-    response = requests.get(
-        URL,
-        headers=headers,
-        timeout=30
-    )
+    request = Request(URL, headers=HEADERS)
 
-    print("HTTP status:", response.status_code)
-    print("Page size:", len(response.text))
+    try:
+        with urlopen(request, timeout=30) as response:
+            content = response.read().decode("utf-8", errors="ignore")
 
-    if response.status_code == 200:
-        print("Successfully accessed the event page.")
+            print("HTTP status:", response.status)
+            print("Page size:", len(content))
 
-        # Save the response so we can inspect what Viagogo
-        # actually sends to the GitHub runner.
-        with open("viagogo_response.html", "w", encoding="utf-8") as f:
-            f.write(response.text)
+            if response.status == 200:
+                print("Successfully accessed the event page.")
 
-        print("Saved response to viagogo_response.html")
-    else:
-        print("Could not access the page.")
+                with open(
+                    "viagogo_response.html",
+                    "w",
+                    encoding="utf-8"
+                ) as file:
+                    file.write(content)
+
+                print("Saved response to viagogo_response.html")
+            else:
+                print("Could not access the page.")
+
+    except Exception as e:
+        print("Error accessing Viagogo:")
+        print(type(e).__name__, e)
 
 
 if __name__ == "__main__":
