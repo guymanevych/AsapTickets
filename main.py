@@ -55,7 +55,7 @@ from playwright.async_api import async_playwright
 # ---------------------------------------------------------------------------
 
 VIAGOGO_URL = "https://www.viagogo.com/ww/Concert-Tickets/Rap-and-Hip-Hop-Music/A-AP-Rocky-Tickets/E-161267796?lt=32.08&lg=34.781&quantity=4"
-SECTION_KEYWORD = os.environ.get("SECTION_KEYWORD", "111")
+SECTION_KEYWORD = os.environ.get("SECTION_KEYWORD", "standing")
 MIN_QUANTITY = int(os.environ.get("MIN_QUANTITY", "4"))
 
 END_DATETIME_STR = os.environ.get("END_DATETIME", "2026-10-05T20:00:00")
